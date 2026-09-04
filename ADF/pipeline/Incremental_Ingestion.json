@@ -1,0 +1,138 @@
+{
+	"name": "Incremental_Ingestion",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForInrementalLoad",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@range(\n    add(int(pipeline().parameters.latest_month), 1),\n    min(\n        3,\n        sub(\n            13,\n            add(int(pipeline().parameters.latest_month), 1)\n        )\n    )\n)",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "IncrementalCopy",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "http_src",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@concat(\n    'hramakrishnan02-sudo/Utilities_dataset/main/maintenance_',\n    string(pipeline().parameters.latest_year),\n    '_',\n    if(\n        less(item(), 10),\n        concat('0', string(item())),\n        string(item())\n    ),\n    '.csv'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "file_sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@concat(\n    'maintenance_',\n    string(pipeline().parameters.latest_year),\n    '_',\n    if(\n        less(item(), 10),\n        concat('0', string(item())),\n        string(item())\n    ),\n    '.csv'\n)",
+											"type": "Expression"
+										},
+										"directory": "monthly_files"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "updateControlTable",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "ForInrementalLoad",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SqlDB_ls",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "UPDATE pipeline_control\nSET\n    last_processed_year = @{pipeline().parameters.latest_year},\n    last_processed_month = @{min(add(int(pipeline().parameters.latest_month), 3), 12)},\n    updated_at = GETUTCDATE()\nWHERE control_id = 1;",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"latest_year": {
+				"type": "string"
+			},
+			"latest_month": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-08-24T16:08:13Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

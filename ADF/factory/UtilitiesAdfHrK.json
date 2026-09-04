@@ -1,0 +1,15 @@
+{
+	"name": "UtilitiesAdfHrK",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f69bf27f-d62c-4297-9781-d5dc1f50b9ef",
+		"tenantId": "8c25f501-4f7e-4b41-9aa6-bdd5f317d4e4"
+	}
+}

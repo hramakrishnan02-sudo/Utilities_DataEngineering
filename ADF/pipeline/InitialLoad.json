@@ -1,0 +1,130 @@
+{
+	"name": "InitialLoad",
+	"properties": {
+		"activities": [
+			{
+				"name": "firstQuarter",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@range(1,3)",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "pullFiles",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "http_src",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@concat(\n    'hramakrishnan02-sudo/Utilities_dataset/main/maintenance_2026_',\n    if(\n        less(item(), 10),\n        concat('0', string(item())),\n        string(item())\n    ),\n    '.csv'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "file_sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"filename": {
+											"value": "@concat(\n    'maintenance_2026_',\n    if(less(item(), 10), concat('0', string(item())), string(item())),\n    '.csv'\n)",
+											"type": "Expression"
+										},
+										"directory": "monthly_files"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "updateControlTable",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "firstQuarter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SqlDB_ls",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "UPDATE pipeline_control\nSET\n    last_processed_year = 2026,\n    last_processed_month = 3,\n    updated_at = GETUTCDATE()\nWHERE control_id = 1;",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-08-24T16:08:13Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,42 @@
+{
+	"name": "ControlTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlDB_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "control_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "source_name",
+				"type": "varchar"
+			},
+			{
+				"name": "last_processed_year",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "last_processed_month",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "updated_at",
+				"type": "datetime2",
+				"scale": 7
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "pipeline_control"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

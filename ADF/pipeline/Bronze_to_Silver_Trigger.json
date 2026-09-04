@@ -1,0 +1,57 @@
+{
+	"name": "Bronze_to_Silver_Trigger",
+	"properties": {
+		"activities": [
+			{
+				"name": "bronzeToSilverJob",
+				"type": "DatabricksJob",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"jobId": "270665393443179"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "silverToGoldJob",
+				"type": "DatabricksJob",
+				"dependsOn": [
+					{
+						"activity": "bronzeToSilverJob",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"jobId": "138312624931246"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-09-03T10:17:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

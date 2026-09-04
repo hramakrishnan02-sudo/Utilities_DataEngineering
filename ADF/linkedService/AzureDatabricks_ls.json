@@ -1,0 +1,13 @@
+{
+	"name": "AzureDatabricks_ls",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-7405615735018931.11.azuredatabricks.net",
+			"authentication": "MSI",
+			"workspaceResourceId": "/subscriptions/b892f70d-d857-4bdd-8175-57b50ad6a3ee/resourceGroups/Motor_Monitoring/providers/Microsoft.Databricks/workspaces/motordatabricks"
+		}
+	}
+}

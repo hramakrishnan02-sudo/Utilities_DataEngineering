@@ -1,0 +1,103 @@
+{
+	"name": "monthlyfiles_IncrementalIngestion",
+	"properties": {
+		"activities": [
+			{
+				"name": "checkControlTable",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT\n    control_id,\n    source_name,\n    last_processed_year,\n    last_processed_month\nFROM pipeline_control\nWHERE source_name = 'maintenance';",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ControlTable",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Check_InitialLoad",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "checkControlTable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(\n    equals(activity('checkControlTable').output.firstRow.last_processed_year, null),\n    equals(activity('checkControlTable').output.firstRow.last_processed_month, null)\n)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "IncrementalLoad",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Incremental_Ingestion",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"latest_year": {
+										"value": "@activity('checkControlTable').output.firstRow.last_processed_year",
+										"type": "Expression"
+									},
+									"latest_month": {
+										"value": "@activity('checkControlTable').output.firstRow.last_processed_month",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "InitialLoad",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "InitialLoad",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-08-24T13:11:20Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

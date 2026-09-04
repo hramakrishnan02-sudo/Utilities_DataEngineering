@@ -1,0 +1,24 @@
+{
+	"name": "newfiletrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Bronze_to_Silver_Trigger",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/bronze/blobs/monthly_files/",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/b892f70d-d857-4bdd-8175-57b50ad6a3ee/resourceGroups/Utilities_maintenance/providers/Microsoft.Storage/storageAccounts/utilitiesmaintainence",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
